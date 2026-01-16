@@ -36,7 +36,7 @@ where
     let writer = ZlibEncoder::new(writer, Compression::default());
     let mut writer = HashWriter::new(writer);
 
-    write!(writer, "blob")?;
+    write!(writer, "blob ")?;
     write!(writer, "{}\0", stat.len())?;
 
     let mut file = fs::File::open(&file).with_context(|| format!("open {}", file.display()))?;

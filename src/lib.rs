@@ -17,7 +17,7 @@ where
 {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let n = self.writer.write(buf)?;
-        self.hasher.update(&buf[..n]);
+        self.hasher.update(&buf);
         Ok(n)
     }
 
