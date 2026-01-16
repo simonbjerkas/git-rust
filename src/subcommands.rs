@@ -20,6 +20,6 @@ pub enum Commands {
         pretty: bool,
 
         ///blob
-        blob: Option<String>,
+        blob: String,
     },
 }
