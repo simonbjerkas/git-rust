@@ -38,7 +38,7 @@ pub fn execute(tree_hash: String, name_only: bool) -> Result<()> {
             stdout
                 .write_all(name)
                 .context("write tree entry name to stdout")?;
-            writeln!(stdout, "");
+            writeln!(stdout, "")?;
             continue;
         }
 

@@ -18,7 +18,7 @@ pub fn execute(pretty: bool, blob: String) -> Result<()> {
             let mut stdout = stdout.lock();
 
             let n = io::copy(&mut object.reader, &mut stdout)
-                .context("write objects content to stdout")?;
+                .context("write objects content to stdout")? as usize;
 
             anyhow::ensure!(
                 n == object.size,
