@@ -19,10 +19,10 @@ pub enum Commands {
     CatFile {
         ///pretty print the result
         #[arg(short)]
-        pretty: bool,
+        pretty_print: bool,
 
-        ///blob
-        blob: Option<String>,
+        ///blob hash
+        blob_hash: Option<String>,
     },
     HashObject {
         ///write to object database
@@ -31,5 +31,12 @@ pub enum Commands {
 
         ///file to hash
         file: Option<path::PathBuf>,
+    },
+    LsTree {
+        ///return names only, no metadata
+        #[arg(long)]
+        name_only: bool,
+        ///tree hash
+        tree_hash: Option<String>,
     },
 }

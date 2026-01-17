@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-pub fn execute(write: bool, file: &Path) -> Result<String> {
+pub fn execute(write: bool, file: &Path) -> Result<()> {
     let hash = if write {
         let tmp = format!("{}.tmp", file.display());
         let writer = fs::File::create(&tmp)?;
@@ -25,7 +25,9 @@ pub fn execute(write: bool, file: &Path) -> Result<String> {
         write_blob(&file, io::sink())?
     };
 
-    Ok(hash)
+    println!("{hash}");
+
+    Ok(())
 }
 
 fn write_blob<W>(file: &Path, writer: W) -> Result<String>

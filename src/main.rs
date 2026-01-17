@@ -1,10 +1,8 @@
 mod cli;
 mod subcommands;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Parser;
-
-use std::io::{self, Write};
 
 use cli::MyGit;
 
@@ -12,29 +10,24 @@ fn main() -> Result<()> {
     let cli = MyGit::parse();
 
     match cli.command {
-        cli::Commands::Init => {
-            subcommands::init::execute()?;
-            println!("Initialized git directory")
-        }
-        cli::Commands::CatFile { blob, pretty } => {
-            let blob = blob.expect("missing argument");
-            let (kind, buf) = subcommands::cat_file::execute(pretty, blob)?;
-
-            let stdout = io::stdout();
-            let mut stdout = stdout.lock();
-
-            use subcommands::cat_file::Kind;
-
-            match kind {
-                Kind::Blob => stdout
-                    .write_all(&buf)
-                    .context("write objects content to stdout")?,
-            }
+        cli::Commands::Init => subcommands::init::execute()?,
+        cli::Commands::CatFile {
+            blob_hash,
+            pretty_print,
+        } => {
+            let blob = blob_hash.expect("missing argument");
+            subcommands::cat_file::execute(pretty_print, blob)?;
         }
         cli::Commands::HashObject { write, file } => {
             let file = file.expect("missing argument");
-            let hash = subcommands::hash_object::execute(write, &file)?;
-            println!("{hash}");
+            subcommands::hash_object::execute(write, &file)?;
+        }
+        cli::Commands::LsTree {
+            name_only,
+            tree_hash,
+        } => {
+            let tree_hash = tree_hash.expect("missing argument");
+            subcommands::ls_tree::execute(tree_hash, name_only)?;
         }
     }
 

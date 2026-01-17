@@ -7,5 +7,7 @@ pub fn execute() -> Result<()> {
     fs::create_dir(".git/refs").context("creating .git/refs directory")?;
     fs::write(".git/HEAD", "ref: refs/heads/main\n").context("writing head to .git/HEAD")?;
 
+    println!("Initialized git directory");
+
     Ok(())
 }
