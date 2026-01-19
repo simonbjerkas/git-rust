@@ -1,52 +1,25 @@
 use anyhow::{Context, Result};
-use codecrafters_git::HashWriter;
-use flate2::{Compression, write::ZlibEncoder};
-use sha1::Digest;
 
-use std::{
-    fs,
-    io::{self, Write},
-    path::Path,
-};
+use std::{io, path::PathBuf};
 
-pub fn execute(write: bool, file: &Path) -> Result<()> {
+use super::Object;
+
+pub fn execute(write: bool, file: &PathBuf) -> Result<()> {
+    let mut object = Object::blob_from_file(file)
+        .with_context(|| format!("creating object from {}", file.display()))?;
     let hash = if write {
-        let tmp = format!("{}.tmp", file.display());
-        let writer = fs::File::create(&tmp)?;
-        let hash = write_blob(&file, writer).context("write out blob object")?;
+        let hash = object
+            .write_to_objects()
+            .context("write object to .git/objects")?;
 
-        fs::create_dir_all(format!(".git/objects/{}", &hash[..2]))
-            .context("create subdirectory to .git/objects")?;
-        fs::rename(&tmp, format!(".git/objects/{}/{}", &hash[..2], &hash[2..]))
-            .context("move blob file into .git/objects")?;
-
-        hash
+        hex::encode(hash)
     } else {
-        write_blob(&file, io::sink())?
+        let hash = object.write(io::sink()).context("writing to sink")?;
+
+        hex::encode(hash)
     };
 
     println!("{hash}");
 
     Ok(())
-}
-
-fn write_blob<W>(file: &Path, writer: W) -> Result<String>
-where
-    W: Write,
-{
-    let stat = fs::metadata(file).with_context(|| format!("stat {}", file.display()))?;
-    let writer = ZlibEncoder::new(writer, Compression::default());
-    let mut writer = HashWriter::new(writer);
-
-    write!(writer, "blob ")?;
-    write!(writer, "{}\0", stat.len())?;
-
-    let mut file = fs::File::open(&file).with_context(|| format!("open {}", file.display()))?;
-
-    io::copy(&mut file, &mut writer).context("stream file into blob")?;
-
-    writer.flush()?;
-    let hash = writer.hasher.finalize();
-
-    Ok(hex::encode(hash))
 }

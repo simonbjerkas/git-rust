@@ -2,18 +2,21 @@ pub mod cat_file;
 pub mod hash_object;
 pub mod init;
 pub mod ls_tree;
+pub mod write_tree;
 
 use std::{
     ffi::CStr,
     fmt::Display,
     fs,
-    io::{BufRead, BufReader, Read},
+    io::{self, BufRead, BufReader, Read, Write},
+    path::PathBuf,
     str::FromStr,
 };
 
 use anyhow::{Context, Result};
-use codecrafters_git::GitError;
-use flate2::read::ZlibDecoder;
+use codecrafters_git::{GitError, HashWriter};
+use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
+use sha1::Digest;
 
 enum Kind {
     Blob,
@@ -81,5 +84,65 @@ impl Object<()> {
             size: size as usize,
             reader,
         })
+    }
+
+    fn blob_from_file(path: &PathBuf) -> Result<Object<impl Read>> {
+        let file = fs::File::open(path).with_context(|| format!("open {}", path.display()))?;
+        let meta = file
+            .metadata()
+            .with_context(|| format!("metadata {}", path.display()))?;
+
+        Ok(Object {
+            kind: Kind::Blob,
+            size: meta.len() as usize,
+            reader: file,
+        })
+    }
+}
+
+impl<R> Object<R>
+where
+    R: Read,
+{
+    fn new_tree(size: usize, reader: R) -> Object<R> {
+        Object {
+            kind: Kind::Tree,
+            size,
+            reader,
+        }
+    }
+
+    fn write(&mut self, writer: impl Write) -> Result<[u8; 20]> {
+        let writer = ZlibEncoder::new(writer, Compression::default());
+        let mut writer = HashWriter::new(writer);
+
+        write!(writer, "{} {}\0", self.kind, self.size)?;
+
+        io::copy(&mut self.reader, &mut writer).context("stream file into blob")?;
+
+        writer.flush()?;
+        let hash = writer.hasher.finalize();
+
+        Ok(hash.into())
+    }
+
+    pub fn write_to_objects(&mut self) -> Result<[u8; 20]> {
+        let tmp = "temp";
+        let writer = fs::File::create(tmp).context("creating temp file for object")?;
+        let hash = self
+            .write(writer)
+            .context("streaming object into temp file")?;
+
+        let hex_hash = hex::encode(hash);
+
+        fs::create_dir_all(format!(".git/objects/{}", &hex_hash[..2]))
+            .context("create subdirectory to .git/objects")?;
+        fs::rename(
+            &tmp,
+            format!(".git/objects/{}/{}", &hex_hash[..2], &hex_hash[2..]),
+        )
+        .context("move temp object file into .git/objects")?;
+
+        Ok(hash)
     }
 }

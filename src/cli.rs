@@ -39,4 +39,5 @@ pub enum Commands {
         ///tree hash
         tree_hash: Option<String>,
     },
+    WriteTree,
 }

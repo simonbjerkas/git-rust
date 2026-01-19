@@ -29,6 +29,7 @@ fn main() -> Result<()> {
             let tree_hash = tree_hash.expect("missing argument");
             subcommands::ls_tree::execute(tree_hash, name_only)?;
         }
+        cli::Commands::WriteTree => subcommands::write_tree::execute()?,
     }
 
     Ok(())
