@@ -40,4 +40,14 @@ pub enum Commands {
         tree_hash: Option<String>,
     },
     WriteTree,
+    CommitTree {
+        ///tree hash
+        tree_hash: Option<String>,
+        ///hash to parent commit
+        #[arg(short)]
+        parent_hash: Option<String>,
+        ///commit message
+        #[arg(short)]
+        message: Option<String>,
+    },
 }

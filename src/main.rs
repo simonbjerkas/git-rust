@@ -30,6 +30,14 @@ fn main() -> Result<()> {
             subcommands::ls_tree::execute(tree_hash, name_only)?;
         }
         cli::Commands::WriteTree => subcommands::write_tree::execute()?,
+        cli::Commands::CommitTree {
+            tree_hash,
+            parent_hash,
+            message,
+        } => {
+            let tree_hash = tree_hash.expect("missingg argument");
+            subcommands::commit_tree::execute(tree_hash, parent_hash, message)?;
+        }
     }
 
     Ok(())

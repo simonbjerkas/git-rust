@@ -1,4 +1,5 @@
 pub mod cat_file;
+pub mod commit_tree;
 pub mod hash_object;
 pub mod init;
 pub mod ls_tree;
@@ -11,6 +12,7 @@ use std::{
     io::{self, BufRead, BufReader, Read, Write},
     path::PathBuf,
     str::FromStr,
+    usize,
 };
 
 use anyhow::{Context, Result};
@@ -21,6 +23,7 @@ use sha1::Digest;
 enum Kind {
     Blob,
     Tree,
+    Commit,
 }
 
 impl FromStr for Kind {
@@ -29,6 +32,7 @@ impl FromStr for Kind {
         match s {
             "blob" => Ok(Kind::Blob),
             "tree" => Ok(Kind::Tree),
+            "commit" => Ok(Kind::Commit),
             other => Err(GitError::Usupported(other.to_string())),
         }
     }
@@ -39,6 +43,7 @@ impl Display for Kind {
         match self {
             Kind::Blob => write!(f, "blob"),
             Kind::Tree => write!(f, "tree"),
+            Kind::Commit => write!(f, "commit"),
         }
     }
 }
@@ -107,6 +112,14 @@ where
     fn new_tree(size: usize, reader: R) -> Object<R> {
         Object {
             kind: Kind::Tree,
+            size,
+            reader,
+        }
+    }
+
+    fn new_commit(size: usize, reader: R) -> Object<R> {
+        Object {
+            kind: Kind::Commit,
             size,
             reader,
         }
