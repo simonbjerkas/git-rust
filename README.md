@@ -1,60 +1,44 @@
-[![progress-banner](https://backend.codecrafters.io/progress/git/6c5283ca-7872-4e80-a16c-ba27a72a6b49)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# git-rust
 
-This is a starting point for Rust solutions to the
-["Build Your Own Git" Challenge](https://codecrafters.io/challenges/git).
+A Git implementation written in Rust. Supports core plumbing commands for reading and writing Git objects, building trees, and creating commits.
 
-In this challenge, you'll build a small Git implementation that's capable of
-initializing a repository, creating commits and cloning a public repository.
-Along the way we'll learn about the `.git` directory, Git objects (blobs,
-commits, trees etc.), Git's transfer protocols and more.
+## Commands
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+| Command | Description |
+|---|---|
+| `init` | Initialize a new `.git` repository |
+| `cat-file -p <hash>` | Print the contents of a Git object |
+| `hash-object [-w] <file>` | Hash a file as a blob object, optionally writing it to the object store |
+| `ls-tree [--name-only] <hash>` | List the contents of a tree object |
+| `write-tree` | Write the current working directory as a tree object |
+| `commit-tree <tree> [-p <parent>] [-m <message>]` | Create a commit object from a tree |
 
-# Passing the first stage
-
-The entry point for your Git implementation is in `src/main.rs`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
-
-That's all!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `cargo (1.92)` installed locally
-1. Run `./your_program.sh` to run your Git implementation, which is implemented
-   in `src/main.rs`. This command compiles your Rust project, so it might be
-   slow the first time you run it. Subsequent runs will be fast.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
-
-# Testing locally
-
-The `your_program.sh` script is expected to operate on the `.git` folder inside
-the current working directory. If you're running this inside the root of this
-repository, you might end up accidentally damaging your repository's `.git`
-folder.
-
-We suggest executing `your_program.sh` in a different folder when testing
-locally. For example:
+## Building
 
 ```sh
-mkdir -p /tmp/testing && cd /tmp/testing
-/path/to/your/repo/your_program.sh init
+cargo build --release
 ```
 
-To make this easier to type out, you could add a
-[shell alias](https://shapeshed.com/unix-alias/):
+## Usage
 
 ```sh
-alias mygit=/path/to/your/repo/your_program.sh
+# Initialize a repo
+./target/release/mygit init
 
-mkdir -p /tmp/testing && cd /tmp/testing
-mygit init
+# Hash and store a file
+./target/release/mygit hash-object -w hello.txt
+
+# Read an object
+./target/release/mygit cat-file -p <hash>
+
+# Write current directory as a tree and commit it
+tree=$(./target/release/mygit write-tree)
+./target/release/mygit commit-tree "$tree" -m "initial commit"
 ```
+
+## Tech
+
+- [`clap`](https://github.com/clap-rs/clap) — CLI parsing
+- [`flate2`](https://github.com/rust-lang/flate2-rs) — zlib compression/decompression for object storage
+- [`sha1`](https://github.com/RustCrypto/hashes) — SHA-1 hashing for object addressing
+- [`anyhow`](https://github.com/dtolnay/anyhow) — error handling
